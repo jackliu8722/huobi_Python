@@ -41,8 +41,11 @@ connection_id = 0
 
 class ConnectionState:
     IDLE = 0
-    CONNECTED = 1
-    CLOSED_ON_ERROR = 2
+    CONNECTING = 1
+    CONNECTED = 2
+    CLOSING = 3
+    CLOSED_ON_ERROR = 4
+    CLOSING_ON_ERROR = 5
 
 
 def websocket_func(*args):
@@ -66,6 +69,7 @@ class WebsocketConnection:
 
     def __init__(self, api_key, secret_key, uri, watch_dog, request):
         # threading.Thread.__init__(self)
+        self.__lock = threading.Lock()
         self.__thread = None
         self.__market_url = "wss://api.huobi.pro/ws"
         self.__trading_url = "wss://api.huobi.pro/ws/v1"
@@ -97,9 +101,6 @@ class WebsocketConnection:
         return self.delay_in_second != -1
 
     def re_connect_in_delay(self, delay_in_second):
-        if self.ws is not None:
-            self.ws.close()
-            self.ws = None
         self.delay_in_second = delay_in_second
         self.logger.warning("[Sub][" + str(self.id) + "] Reconnecting after "
                             + str(self.delay_in_second) + " seconds later")
@@ -112,24 +113,33 @@ class WebsocketConnection:
             self.connect()
 
     def connect(self):
-        if self.state == ConnectionState.CONNECTED:
-            self.logger.info("[Sub][" + str(self.id) + "] Already connected")
-        else:
-            self.__thread = threading.Thread(target=websocket_func, args=[self])
-            self.__thread.start()
+        with self.__lock:
+            if self.state == ConnectionState.CONNECTED:
+                self.logger.info("[Sub][" + str(self.id) + "] Already connected")
+            else:
+                self.state = ConnectionState.CONNECTING
+                self.__thread = threading.Thread(target=websocket_func, args=[self])
+                self.__thread.start()
 
     def send(self, data):
-        #print(data)
+        # print(data)
         self.ws.send(data)
 
-    def close(self):
-        self.ws.close()
+    def on_close(self):
         del websocket_connection_handler[self.ws]
-        self.__watch_dog.on_connection_closed(self)
-        self.logger.error("[Sub][" + str(self.id) + "] Closing normally")
+        self.ws = None
+        if self.state == ConnectionState.CLOSING:
+            self.state = ConnectionState.IDLE
+            self.__watch_dog.on_connection_closed(self)
+            self.logger.error("[Sub][" + str(self.id) + "] Closed")
+        elif self.state == ConnectionState.CLOSING_ON_ERROR:
+            self.state = ConnectionState.CLOSED_ON_ERROR
+            self.logger.error("[Sub][" + str(self.id) + "] Closed with error")
+        else:
+            self.logger.error("[Sub][" + str(self.id) + "] Closed unexpected state")
 
     def on_open(self, ws):
-        #print("### open ###")
+        # print("### open ###")
         self.logger.info("[Sub][" + str(self.id) + "] Connected to server")
         self.ws = ws
         self.last_receive_time = get_current_timestamp()
@@ -162,7 +172,7 @@ class WebsocketConnection:
     def on_message(self, message):
         self.last_receive_time = get_current_timestamp()
         json_wrapper = parse_json_from_string(gzip.decompress(message).decode("utf-8"))
-        #print("RX: " + gzip.decompress(message).decode("utf-8"))
+        # print("RX: " + gzip.decompress(message).decode("utf-8"))
 
         if json_wrapper.contain_key("status") and json_wrapper.get_string("status") != "ok":
             error_code = json_wrapper.get_string_or_default("err-code", "Unknown error")
@@ -205,8 +215,17 @@ class WebsocketConnection:
         self.send("{\"pong\":" + str(get_current_timestamp()) + "}")
         return
 
+    def close(self):
+        with self.__lock:
+            if self.ws is not None:
+                self.state = ConnectionState.CLOSING
+                self.ws.close()
+                self.logger.error("[Sub][" + str(self.id) + "] Closing normally")
+
     def close_on_error(self):
-        if self.ws is not None:
-            self.ws.close()
-            self.state = ConnectionState.CLOSED_ON_ERROR
-            self.logger.error("[Sub][" + str(self.id) + "] Connection is closing due to error")
+        with self.__lock:
+            if self.ws is not None:
+                self.state = ConnectionState.CLOSING_ON_ERROR
+                self.ws.close()
+                self.logger.error("[Sub][" + str(self.id) + "] Connection is closing due to error")
+
