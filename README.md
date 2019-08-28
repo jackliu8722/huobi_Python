@@ -73,7 +73,7 @@ The example code is in python3/example.
 
 To install by source code, run below command
 
-```python
+```
 python3 setup.py install
 ```
 
@@ -86,7 +86,7 @@ In your python project, you can follow below steps:
 * Create the client instance.
 * Call the interfaces provided by client.
 
-```python
+```
 request_client = RequestClient()
 
 # Get the timestamp from Huobi server and print on console
@@ -130,11 +130,11 @@ There are 2 clients, one is for request method, ```RequestClient``` , another is
 
 You can assign the API key and Secret key when you create the client. See below:
 
-```python
+```
 request_client = RequestClient(api_key="xxxxxxxx-xxxxxxxx-xxxxxxxx-xxxxx", secret_key="xxxxxxxx-xxxxxxxx-xxxxxxxx-xxxxx")
 ```
 
-```python
+```
 subscription_client = SubscriptionClient(api_key="xxxxxxxx-xxxxxxxx-xxxxxxxx-xxxxx", secret_key="xxxxxxxx-xxxxxxxx-xxxxxxxx-xxxxx")
 ```
 
@@ -150,11 +150,11 @@ If the authentication cannot pass, the invoking of private interface will fail.
 
 If you want to invoke public interface only. You can create the client as follow:
 
-```python
+```
 request_client = RequestClient()
 ```
 
-```python
+```
 subscription_client = SubscriptionClient()
 ```
 
@@ -169,7 +169,7 @@ To support huobi cloud, you can specify the custom host.
 
 See below example
 
-```python
+```
 # Set custom host for request
 request_client = RequestClient(api_key="xxxxxxxx-xxxxxxxx-xxxxxxxx-xxxxx", secret_key="xxxxxxxx-xxxxxxxx-xxxxxxxx-xxxxx", url="https://www.xxx.yyy/")
 
@@ -192,7 +192,7 @@ For subscription: wss://api.huobi.pro
 
 To invoke the interface by synchronous, you can create the ```RequestClient``` and call the API directly.
 
-```python
+```
 request_client = RequestClient()
 # Get the best bid and ask for btcusdt, print the best ask price and amount on console.
 best_quote = request_client.get_best_quote("btcusdt")
@@ -206,7 +206,7 @@ print(best_quote.ask_amount)
 
 To receive the subscribed data, you can create the ```SubscriptionClient```. When subscribing the event, you should define your callback function. See below example:
 
-```python
+```
 subscription_client = SubscriptionClient()
 
 # Subscribe the trade update for btcusdt.
@@ -220,7 +220,7 @@ subscription_client.subscribe_trade_event("btcusdt", callback)
 
 The subscription method supports multi-symbol string. Each symbol should be separated by a comma.
 
-```python
+```
 subscription_client.subscribe_trade_event("btcusdt,ethusdt", callback)
 ```
 
@@ -232,7 +232,7 @@ subscription_client.subscribe_trade_event("btcusdt,ethusdt", callback)
 
 In error case, such as you set the invalid symbol to ```get_best_quote()```. The ```HuobiApiException``` will be thrown. See below example:
 
-```python
+```
 try:
     best_quote = request_client.get_best_quote("abcdefg")
     print(best_quote.ask_price)
@@ -247,7 +247,7 @@ except HuobiApiException as e:
 
 If you want to check the error, you should implement your ```error_handler```. See below example:
 
-```python
+```
 def callback(trade_event: 'TradeEvent'):
     print(trade_event.symbol)
     for trade in trade_event.trade_list:
@@ -266,7 +266,7 @@ Any error made during subscription will be output to a log file, If you do not d
 
 The SDK is using the common logging module, to show it to console, you can follow below steps before create the client:
 
-```python
+```
 logger = logging.getLogger("huobi-client")
 logger.setLevel(level=logging.INFO)
 handler = logging.StreamHandler()
@@ -282,7 +282,7 @@ logger.addHandler(handler)
 
 #### Exchange timestamp
 
-```python
+```
 //Synchronous
 timestamp = request_client.get_exchange_timestamp()
 print(timestamp)
@@ -290,7 +290,7 @@ print(timestamp)
 
 #### Symbol and currencies
 
-```python
+```
 exchange_info = request_client.get_exchange_info()
 for currency in exchange_info.currencies:
     print(currency)
@@ -300,7 +300,7 @@ for currency in exchange_info.currencies:
 
 #### Candlestick/KLine
 
-```python
+```
 candlestick_list = request_client.get_latest_candlestick("btcusdt", CandlestickInterval.DAY1, 20)
 for candlestick in candlestick_list:
     print(candlestick.high)
@@ -308,7 +308,7 @@ for candlestick in candlestick_list:
 
 #### Depth
 
-```python
+```
 price_depth = request_client.get_price_depth("btcusdt", 5)
 for depth in price_depth.bids:
     print(depth.price)
@@ -316,14 +316,14 @@ for depth in price_depth.bids:
 
 #### Latest trade
 
-```python
+```
 trade = request_client.get_last_trade("btcusdt")
 print(trade.price)
 ```
 
 #### Best bid/ask
 
-```python
+```
 best_quote = request_client.get_best_quote("btcusdt")
 print(best_quote.ask_price)
 print(best_quote.ask_amount)
@@ -331,14 +331,14 @@ print(best_quote.ask_amount)
 
 #### Historical
 
-```python
+```
 trade_list = request_client.get_historical_trade("btcusdt", 5)
 print(trade_list[0].price)
 ```
 
 #### 24H statistics
 
-```python
+```
 trade_statistics = request_client.get_24h_trade_statistics("btcusdt")
 print(trade_statistics.open)
 ```
@@ -347,7 +347,7 @@ print(trade_statistics.open)
 
 *Authentication is required.*
 
-```python
+```
 balance = request_client.get_account_balance_by_account_type(AccountType.SPOT)
 print(balance.get(0).get(0).balance)
 ```
@@ -358,7 +358,7 @@ print(balance.get(0).get(0).balance)
 
 *Authentication is required.*
 
-```python
+```
 id = request_client.withdraw("xxxxxxx", 0.1, "btc")
 print(id)
 ```
@@ -367,7 +367,7 @@ print(id)
 
 *Authentication is required.*
 
-```python
+```
 request_client.cancel_withdraw("btc", id)
 ```
 
@@ -375,7 +375,7 @@ request_client.cancel_withdraw("btc", id)
 
 *Authentication is required.*
 
-```python
+```
 withdraw_list = request_client.get_withdraw_history("btc", id, 10)
 print(withdraw_list[0].amount)
 deposit_list = request_client.get_deposit_history("btc", id, 10)
@@ -388,7 +388,7 @@ print(deposit_list[0].amount)
 
 *Authentication is required.*
 
-```python
+```
 order_id = request_client.create_order("btcusdt", AccountType.SPOT, OrderType.BUY_LIMIT, 1.0, 1.0)
 print(id)
 ```
@@ -397,7 +397,7 @@ print(id)
 
 *Authentication is required.*
 
-```python
+```
 request_client.cancel_order("btcusdt", order_id)
 ```
 
@@ -405,7 +405,7 @@ request_client.cancel_order("btcusdt", order_id)
 
 *Authentication is required.*
 
-```python
+```
 result = request_client.cancel_open_orders("btcusdt", AccountType.SPOT, OrderSide.SELL, 10)
 print(result.success_count)
 ```
@@ -414,7 +414,7 @@ print(result.success_count)
 
 *Authentication is required.*
 
-```python
+```
 order = request_client.get_order("symbol", id)
 print(order.price)
 ```
@@ -423,7 +423,7 @@ print(order.price)
 
 *Authentication is required.*
 
-```python
+```
 order_list = request_client.get_historical_orders("symbol", OrderState.SUBMITTED)
 print(order_list[0].price)
 ```
@@ -434,7 +434,7 @@ print(order_list[0].price)
 
 *Authentication is required.*
 
-```python
+```
 id = request_client.apply_loan("btcusdt", "btc", 10.0)
 print(id)
 ```
@@ -443,7 +443,7 @@ print(id)
 
 *Authentication is required.*
 
-```python
+```
 id = request_client.repay_loan(id, 10.0)
 print(id)
 ```
@@ -452,7 +452,7 @@ print(id)
 
 *Authentication is required.*
 
-```python
+```
 loan_list = request_client.get_loan_history("btcusdt")
 print(loan_list[0].loan_amount)
 ```
@@ -463,7 +463,7 @@ print(loan_list[0].loan_amount)
 
 ### Subscribe trade update
 
-```python
+```
 def callback(trade_event: 'TradeEvent'):
     print(trade_event.symbol)
     for trade in trade_event.trade_list:
@@ -474,7 +474,7 @@ subscription_client.subscribe_trade_event("btcusdt", callback)
 
 ###Subscribe candlestick/KLine update
 
-```python
+```
 def callback(candlestick_event: 'CandlestickEvent'):
     print(candlestick_event.data.high)
 
@@ -485,7 +485,7 @@ subscription_client.subscribe_candlestick_event("btcusdt", CandlestickInterval.M
 
 *Authentication is required.*
 
-```python
+```
 def callback(order_update_event: 'OrderUpdateEvent'):
     print(order_update_event.data.price)
 
@@ -496,7 +496,7 @@ subscription_client.subscribe_order_update_event("btcusdt", callback)
 
 *Authentication is required.*
 
-```python
+```
 def callback(account_event: 'AccountEvent'):
     for change in account_event.account_change_list:
         print(change.account_type)
@@ -508,7 +508,7 @@ subscription_client.subscribe_account_event(BalanceMode.TOTAL, callback)
 
 You can cancel all subscription by calling ```unsubscribe_all()```.
 
-```python
+```
 subscription_client.unsubscribe_all()
 ```
 
