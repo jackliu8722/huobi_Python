@@ -1,7 +1,7 @@
 import json
 from huobi.impl.utils.timeservice import get_current_timestamp
 
-class ChannelTool:
+class ChannelsProto:
     def __init__(self):
         pass
 

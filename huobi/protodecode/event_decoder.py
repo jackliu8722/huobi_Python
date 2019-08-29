@@ -1,4 +1,4 @@
-from huobi.gateway.market_downstream_protocol_pb2 import Action
+from huobi.protodecode.market_downstream_protocol_pb2 import Action
 from . import market_downstream_protocol_pb2
 
 

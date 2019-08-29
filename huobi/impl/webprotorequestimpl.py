@@ -1,6 +1,8 @@
 import time
-from huobi.impl.ws_request import WSRequest
-from huobi.impl.utils.channel_tool import ChannelTool
+import sys
+import json
+from huobi.impl.webprotorequest import WebProtoRequest
+from huobi.impl.utils.channels_proto import ChannelsProto
 from huobi.impl.utils.channelparser import ChannelParser
 from huobi.impl.accountinfomap import account_info_map
 from huobi.impl.utils.timeservice import *
@@ -8,7 +10,7 @@ from huobi.impl.utils.inputchecker import *
 from huobi.model import *
 
 
-class WSRequestImpl(object):
+class WebProtoRequestImpl(object):
 
     def __init__(self, api_key):
         self.__api_key = api_key
@@ -20,28 +22,35 @@ class WSRequestImpl(object):
 
         def subscription_handler(connection):
             for val in symbols:
-                connection.send(ChannelTool.candlestick_channel(val, interval))
+                connection.send(ChannelsProto.candlestick_channel(val, interval))
                 time.sleep(0.01)
 
         def parse(r):
-            item = r.data
             candlestick_event = CandlestickEvent()
-            candlestick_event.symbol = item.symbol
-            candlestick_event.interval = interval
-            candlestick_event.timestamp = convert_cst_in_millisecond_to_utc(item.ts)
-            data = Candlestick()
-            data.timestamp = convert_cst_in_second_to_utc(item.id)
-            data.open = item.open
-            data.close = item.close
-            data.low = item.low
-            data.high = item.high
-            data.amount = item.turnover
-            data.count = item.num_of_trades
-            data.volume = item.volume
-            candlestick_event.data = data
-            return candlestick_event
+            try:
+                item = r.data
 
-        request = WSRequest()
+                candlestick_event.symbol = item.symbol
+                candlestick_event.interval = interval
+                candlestick_event.timestamp = convert_cst_in_millisecond_to_utc(item.ts)
+                data = Candlestick()
+                data.timestamp = convert_cst_in_second_to_utc(item.id)
+                data.open = item.open
+                data.close = item.close
+                data.low = item.low
+                data.high = item.high
+                data.amount = item.turnover
+                data.count = item.num_of_trades
+                data.volume = item.volume
+                candlestick_event.data = data
+
+            except Exception as e:
+                print (json.dumps(r.__dict__))
+                print(e)
+            finally:
+                return candlestick_event
+
+        request = WebProtoRequest()
         request.subscription_handler = subscription_handler
         request.is_trading = False
         request.parser = parse

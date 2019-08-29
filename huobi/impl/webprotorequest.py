@@ -1,4 +1,4 @@
-class WSRequest:
+class WebProtoRequest:
     def __init__(self):
         self.subscription_handler = None
         self.is_trading = False

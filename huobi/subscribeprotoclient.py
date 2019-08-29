@@ -1,12 +1,13 @@
+import sys
 import urllib.parse
-from huobi.impl.ws_request_impl import WSRequestImpl
-from huobi.impl.ws_connection import WSConnection
+from huobi.impl.webprotorequestimpl import WebProtoRequestImpl
+from huobi.impl.webprotoconnection import WebProtoConnection
 from huobi.impl.websocketwatchdog import WebSocketWatchDog
 from huobi.impl.restapirequestimpl import RestApiRequestImpl
 from huobi.impl.accountinfomap import account_info_map
 from huobi.model import *
 
-class SubscribeClient(object):
+class SubscribeProtoClient(object):
 
     def __init__(self, **kwargs):
         """
@@ -33,7 +34,7 @@ class SubscribeClient(object):
             secret_key = kwargs["secret_key"]
         self.__api_key = api_key
         self.__secret_key = secret_key
-        self.ws_request_impl = WSRequestImpl(self.__api_key)
+        self.ws_request_impl = WebProtoRequestImpl(self.__api_key)
         self.connections = list()
         self.uri = "ws://huobi-gateway.test-12.huobiapps.com/"
         is_auto_connect = True
@@ -57,7 +58,7 @@ class SubscribeClient(object):
             pass
 
     def __create_connection(self, request):
-        connection = WSConnection(self.__api_key, self.__secret_key, self.uri, self.__watch_dog, request)
+        connection = WebProtoConnection(self.__api_key, self.__secret_key, self.uri, self.__watch_dog, request)
         self.connections.append(connection)
         connection.connect()
 
@@ -75,9 +76,12 @@ class SubscribeClient(object):
                         pass
         :return: No return
         """
-        symbol_list = symbols.split(",")
-        request = self.ws_request_impl.subscribe_candlestick_event(symbol_list, interval, callback, error_handler)
-        self.__create_connection(request)
+        try:
+            symbol_list = symbols.split(",")
+            request = self.ws_request_impl.subscribe_candlestick_event(symbol_list, interval, callback, error_handler)
+            self.__create_connection(request)
+        except Exception as e:
+            print(e)
 
     def subscribe_price_depth_event(self, symbols: 'str', callback, error_handler=None):
         """

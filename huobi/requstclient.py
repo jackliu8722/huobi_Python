@@ -27,7 +27,8 @@ class RequestClient(object):
         try:
             self.request_impl = RestApiRequestImpl(api_key, secret_key, url)
             account_info_map.update_user_info(api_key, self.request_impl)
-        except Exception:
+        except Exception as e:
+            print (e)
             pass
 
     def get_latest_candlestick(self, symbol: 'str', interval: 'CandlestickInterval', size: 'int' = 150) -> list:

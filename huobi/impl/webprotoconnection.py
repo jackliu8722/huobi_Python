@@ -1,3 +1,4 @@
+import sys
 import threading
 import websocket
 import ssl
@@ -5,8 +6,8 @@ import logging
 from urllib import parse
 import urllib.parse
 
-from huobi.gateway.event_decoder import EventDecoder
-from huobi.gateway.market_downstream_protocol_pb2 import Action
+from huobi.protodecode.event_decoder import EventDecoder
+from huobi.protodecode.market_downstream_protocol_pb2 import Action
 from huobi.impl.utils.timeservice import get_current_timestamp
 from huobi.impl.utils.urlparamsbuilder import UrlParamsBuilder
 from huobi.impl.utils.apisignature import create_signature
@@ -71,7 +72,7 @@ def ws_func(*args):
         connection_instance.state = ConnectionState.IDLE
 
 
-class WSConnection:
+class WebProtoConnection:
 
     def __init__(self, api_key, secret_key, uri, watch_dog, request):
         # threading.Thread.__init__(self)
@@ -190,17 +191,19 @@ class WSConnection:
 
             r = EventDecoder.decode(message)
 
-            if (r.action == Action.PING):
-                self.__process_ping_on_market_line(r)
-            elif ((r.action == Action.PUSH) or (r.action == Action.REQ)):
-                self.__on_receive(r)
+            if r is not None:
+                if (r.action == Action.PING):
+                    self.__process_ping_on_market_line(r)
+                elif ((r.action == Action.PUSH) or (r.action == Action.REQ)):
+                    self.__on_receive(r)
+                #elif ((r.action == Action.SUB) ):  # add SUB will triger Failed to parse receive message: 'str' object has no attribute 'symbol'
         except Exception as e:
             self.on_error("Failed to parse server's response: " + str(e))
 
     def __on_receive(self, r):
         res = None
         try:
-            if self.request.parser is not None:
+            if self.request.parser is not None and r is not None:
                 res = self.request.parser(r)
         except Exception as e:
             self.on_error("Failed to parse receive message: " + str(e))

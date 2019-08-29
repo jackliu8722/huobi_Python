@@ -1,5 +1,6 @@
+import sys
 import logging
-from huobi import SubscribeClient
+from huobi import SubscribeProtoClient
 from huobi.model import *
 from huobi.exception.huobiapiexception import HuobiApiException
 
@@ -12,7 +13,7 @@ logger.addHandler(handler)
 
 
 def callback(candlestick_event: 'CandlestickEvent'):
-    print("新方式: ")
+    print("result from protobuf: ")
     print("Symbol: " + candlestick_event.symbol)
     print("High: " + str(candlestick_event.data.high))
     print("Low: " + str(candlestick_event.data.low))
@@ -25,5 +26,5 @@ def callback(candlestick_event: 'CandlestickEvent'):
 def error(e: 'HuobiApiException'):
     print(e.error_code + e.error_message)
 
-subscribe_client = SubscribeClient()
-subscribe_client.subscribe_candlestick_event("btcusdt", CandlestickInterval.MIN_15, callback, error)
+subscribe_client = SubscribeProtoClient()
+subscribe_client.subscribe_candlestick_event("btcusdt,usdtbtc", CandlestickInterval.MIN_15, callback, error)
