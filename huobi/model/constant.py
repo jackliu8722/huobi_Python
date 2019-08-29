@@ -8,6 +8,29 @@ class CandlestickInterval:
     MON1 = "1mon"
     WEEK1 = "1week"
     YEAR1 = "1year"
+
+    # 新版本
+    # 一分钟
+    MIN_1 = "1m"
+    # 5分钟
+    MIN_5 = "5m"
+    # 15分钟
+    MIN_15 = "15m"
+    # 30分钟
+    MIN_30 = "30m"
+    # 60分钟
+    MIN_60 = "60m"
+    # 4小时
+    HOUR_4 = "4h"
+    # 一天
+    DAY_1 = "1d"
+    # 一周
+    WEEK_1 = "1w"
+    # 一月
+    MON_1 = "1M"
+    # 一年
+    YEAR_1 = "1y"
+
     INVALID = None
 
 
@@ -157,13 +180,14 @@ class BalanceMode:
     TOTAL = "1"
     INVALID = None
 
+
 class OperateMode:
     PING = "ping"
     PONG = "pong"
     INVALID = None
 
+
 class QueryDirection:
     PREV = "prev"
     NEXT = "next"
     INVALID = None
-
