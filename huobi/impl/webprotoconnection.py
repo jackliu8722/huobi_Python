@@ -110,7 +110,8 @@ class WebProtoConnection:
         #     self.url = self.__market_url
         self.__market_url = self.scheme + host + self.market_url
         self.__trading_url = self.scheme + host + self.trading_url
-        self.url = "ws://huobi-gateway.test-12.huobiapps.com/ws"
+        #self.url = "ws://huobi-gateway.test-12.huobiapps.com/ws"  # 线下测试环境，订阅的时候只推送一条消息
+        self.url = "wss://api.huobi.pro/spot/v2/ws"
 
     def in_delay_connection(self):
         return self.delay_in_second != -1
@@ -196,7 +197,6 @@ class WebProtoConnection:
                     self.__process_ping_on_market_line(r)
                 elif ((r.action == Action.PUSH) or (r.action == Action.REQ)):
                     self.__on_receive(r)
-                #elif ((r.action == Action.SUB) ):  # add SUB will triger Failed to parse receive message: 'str' object has no attribute 'symbol'
         except Exception as e:
             self.on_error("Failed to parse server's response: " + str(e))
 

@@ -7,7 +7,7 @@ from huobi.impl.utils.channelparser import ChannelParser
 from huobi.impl.accountinfomap import account_info_map
 from huobi.impl.utils.timeservice import *
 from huobi.impl.utils.inputchecker import *
-from huobi.model import *
+from huobi.model_proto import *
 
 
 class WebProtoRequestImpl(object):
@@ -27,28 +27,23 @@ class WebProtoRequestImpl(object):
 
         def parse(r):
             candlestick_event = CandlestickEvent()
-            try:
-                item = r.data
+            item = r.data
 
-                candlestick_event.symbol = item.symbol
-                candlestick_event.interval = interval
-                candlestick_event.timestamp = convert_cst_in_millisecond_to_utc(item.ts)
-                data = Candlestick()
-                data.timestamp = convert_cst_in_second_to_utc(item.id)
-                data.open = item.open
-                data.close = item.close
-                data.low = item.low
-                data.high = item.high
-                data.amount = item.turnover
-                data.count = item.num_of_trades
-                data.volume = item.volume
-                candlestick_event.data = data
+            candlestick_event.symbol = item.symbol
+            candlestick_event.interval = interval
+            candlestick_event.timestamp = convert_cst_in_millisecond_to_utc(item.ts)
+            data = Candlestick()
+            data.timestamp = convert_cst_in_second_to_utc(item.id)
+            data.open = item.open
+            data.close = item.close
+            data.low = item.low
+            data.high = item.high
+            data.amount = item.turnover
+            data.count = item.num_of_trades
+            data.volume = item.volume
+            candlestick_event.data = data
 
-            except Exception as e:
-                print (json.dumps(r.__dict__))
-                print(e)
-            finally:
-                return candlestick_event
+            return candlestick_event
 
         request = WebProtoRequest()
         request.subscription_handler = subscription_handler
@@ -132,50 +127,52 @@ class WebProtoRequestImpl(object):
     #     request.error_handler = error_handler
     #     return request
     #
-    # def subscribe_price_depth_event(self, symbols, callback, error_handler=None):
-    #     check_symbol_list(symbols)
-    #     check_should_not_none(callback, "callback")
-    #
-    #     def subscription_handler(connection):
-    #         for val in symbols:
-    #             connection.send(price_depth_channel(val))
-    #             time.sleep(0.01)
-    #
-    #     def parse(json_wrapper):
-    #         ch = json_wrapper.get_string("ch")
-    #         parse = ChannelParser(ch)
-    #         price_depth_event = PriceDepthEvent()
-    #         price_depth_event.symbol = parse.symbol
-    #         price_depth_event.timestamp = convert_cst_in_millisecond_to_utc(json_wrapper.get_int("ts"))
-    #         price_depth = PriceDepth()
-    #         tick = json_wrapper.get_object("tick")
-    #         bid_list = list()
-    #         bids_array = tick.get_array("bids")
-    #         for item in bids_array.get_items_as_array():
-    #             depth_entry = DepthEntry()
-    #             depth_entry.price = item.get_float_at(0)
-    #             depth_entry.amount = item.get_float_at(1)
-    #             bid_list.append(depth_entry)
-    #         ask_list = list()
-    #         asks_array = tick.get_array("asks")
-    #         for item in asks_array.get_items_as_array():
-    #             depth_entry = DepthEntry()
-    #             depth_entry.price = item.get_float_at(0)
-    #             depth_entry.amount = item.get_float_at(1)
-    #             ask_list.append(depth_entry)
-    #         price_depth.bids = bid_list
-    #         price_depth.asks = ask_list
-    #         price_depth_event.data = price_depth
-    #         return price_depth_event
-    #
-    #     request = WebsocketRequest()
-    #     request.subscription_handler = subscription_handler
-    #     request.is_trading = False
-    #     request.parser = parse
-    #     request.update_callback = callback
-    #     request.error_handler = error_handler
-    #     return request
-    #
+    def subscribe_price_depth_event(self, symbols, levels, step, callback, error_handler=None):
+        check_symbol_list(symbols)
+        check_should_not_none(callback, "callback")
+        # TODO levels check
+        # TODO step check
+
+        def subscription_handler(connection):
+            for symbol in symbols:
+                #print ("send connection for channel : " + ChannelsProto.price_depth_channel(symbol, levels, step))
+                connection.send(ChannelsProto.price_depth_channel(symbol, levels, step))
+                time.sleep(0.01)
+
+        def format_depth_entry(price, size):
+            depth_entry = DepthEntry()
+            depth_entry.price = price
+            depth_entry.size = size
+            return depth_entry
+
+        def parse(r):
+            event_obj = PriceDepthEvent()
+            item = r.data
+
+            event_obj.symbol = item.symbol
+            event_obj.timestamp = get_current_timestamp()
+            data = PriceDepth()
+
+            if len(item.bids):
+                for row in item.bids:
+                    data.bids.append(format_depth_entry(price=row.price, size=row.size))
+            if len(item.asks):
+                for row in item.asks:
+                    data.asks.append(format_depth_entry(price=row.price, size=row.size))
+
+            data.delta = item.delta
+            event_obj.data = data
+
+            return event_obj
+
+        request = WebProtoRequest()
+        request.subscription_handler = subscription_handler
+        request.is_trading = False
+        request.parser = parse
+        request.update_callback = callback
+        request.error_handler = error_handler
+        return request
+
     # def subscribe_order_update(self, symbols, callback, error_handler=None):
     #     check_symbol_list(symbols)
     #     check_should_not_none(callback, "callback")

@@ -5,7 +5,7 @@ from huobi.impl.webprotoconnection import WebProtoConnection
 from huobi.impl.websocketwatchdog import WebSocketWatchDog
 from huobi.impl.restapirequestimpl import RestApiRequestImpl
 from huobi.impl.accountinfomap import account_info_map
-from huobi.model import *
+from huobi.model_proto import *
 
 class SubscribeProtoClient(object):
 
@@ -83,7 +83,7 @@ class SubscribeProtoClient(object):
         except Exception as e:
             print(e)
 
-    def subscribe_price_depth_event(self, symbols: 'str', callback, error_handler=None):
+    def subscribe_price_depth_event(self, symbols: 'str', levels: int, step: 'str', callback, error_handler=None):
         """
         Subscribe price depth event. If the price depth is updated, server will send the data to client and onReceive in callback will be called.
 
@@ -97,7 +97,7 @@ class SubscribeProtoClient(object):
         :return:  No return
         """
         symbol_list = symbols.split(",")
-        request = self.ws_request_impl.subscribe_price_depth_event(symbol_list, callback, error_handler)
+        request = self.ws_request_impl.subscribe_price_depth_event(symbol_list, levels, step, callback, error_handler)
         self.__create_connection(request)
 
     def subscribe_order_update_event(self, symbols: 'str', callback, error_handler=None):

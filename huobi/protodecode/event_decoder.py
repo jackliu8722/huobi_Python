@@ -1,3 +1,4 @@
+import sys
 from huobi.protodecode.market_downstream_protocol_pb2 import Action
 from . import market_downstream_protocol_pb2
 
@@ -13,6 +14,8 @@ class EventDecoder:
 
         r = EventDecoder.R()
         result = market_downstream_protocol_pb2.Result().FromString(data)
+        #print ("Sequence === : " + (str(result.sequence)))
+        #print ("Code === : " + (str(result.code)))
 
         r.seq = None if not result.sequence else result.sequence
         r.code = None if not result.code else result.code
@@ -21,6 +24,9 @@ class EventDecoder:
         r.ch = result.ch
         if result.data.value:
             r.data = EventDecoder.decodeData(result)
+
+        #print ("Sequence : " + (str(r.seq)))
+        #print ("Code : " + (str(r.code)))
 
         return r
 
