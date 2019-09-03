@@ -1,4 +1,4 @@
-from huobi.model.tradestatistics import TradeStatistics
+from huobi.model_proto.tradestatistics import TradeStatistics
 
 
 class TradeStatisticsEvent:

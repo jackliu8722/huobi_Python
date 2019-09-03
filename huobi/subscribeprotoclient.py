@@ -100,7 +100,7 @@ class SubscribeProtoClient(object):
         request = self.ws_request_impl.subscribe_price_depth_event(symbol_list, levels, step, callback, error_handler)
         self.__create_connection(request)
 
-    def subscribe_order_update_event(self, symbols: 'str', callback, error_handler=None):
+    def subscribe_aggregate_trade_event(self, symbols: 'str', callback, error_handler=None):
         """
         Subscribe order changing event. If a order is created, canceled etc, server will send the data to client and onReceive in callback will be called.
 
@@ -114,10 +114,10 @@ class SubscribeProtoClient(object):
         :return:  No return
         """
         symbol_list = symbols.split(",")
-        request = self.ws_request_impl.subscribe_order_update(symbol_list, callback, error_handler)
+        request = self.ws_request_impl.subscribe_aggregate_trade_event(symbol_list, callback, error_handler)
         self.__create_connection(request)
 
-    def subscribe_trade_event(self, symbols: 'str', callback, error_handler=None):
+    def subscribe_detail_trade_event(self, symbols: 'str', callback, error_handler=None):
         """
         Subscribe price depth event. If the price depth is updated, server will send the data to client and onReceive in callback will be called.
 
@@ -131,10 +131,10 @@ class SubscribeProtoClient(object):
         :return:  No return
         """
         symbol_list = symbols.split(",")
-        request = self.ws_request_impl.subscribe_trade_event(symbol_list, callback, error_handler)
+        request = self.ws_request_impl.subscribe_detail_trade_event(symbol_list, callback, error_handler)
         self.__create_connection(request)
 
-    def subscribe_24h_trade_statistics_event(self, symbols: 'str', callback, error_handler=None):
+    def subscribe_overview_event(self, callback, error_handler=None):
         """
         Subscribe 24 hours trade statistics event. If statistics is generated, server will send the data to client and onReceive in callback will be called.
 
@@ -147,24 +147,24 @@ class SubscribeProtoClient(object):
                         pass
         :return:  No return
         """
-        symbol_list = symbols.split(",")
-        request = self.ws_request_impl.subscribe_24h_trade_statistics_event(symbol_list, callback, error_handler)
+        request = self.ws_request_impl.subscribe_overview_event(callback, error_handler)
         self.__create_connection(request)
 
-    def subscribe_account_event(self, mode: 'BalanceMode', callback, error_handler=None):
+    def subscribe_24h_trade_statistics_event(self, symbols: 'str', callback, error_handler=None):
         """
-        Subscribe account changing event. If the balance is updated, server will send the data to client and onReceive in callback will be called.
+        Subscribe order changing event. If a order is created, canceled etc, server will send the data to client and onReceive in callback will be called.
 
-        :param mode: when mode is AVAILABLE, balance refers to available balance; when mode is TOTAL, balance refers to TOTAL balance for trade sub account (available+frozen).
+        :param symbols: The symbols, like "btcusdt". Use comma to separate multi symbols, like "btcusdt,ethusdt".
         :param callback: The implementation is required. onReceive will be called if receive server's update.
-            example: def callback(account_event: 'AccountEvent'):
+            example: def callback(order_update_event: 'OrderUpdateEvent'):
                         pass
         :param error_handler: The error handler will be called if subscription failed or error happen between client and Huobi server
             example: def error_handler(exception: 'HuobiApiException')
                         pass
         :return:  No return
         """
-        request = self.ws_request_impl.subscribe_account_event(mode, callback, error_handler)
+        symbol_list = symbols.split(",")
+        request = self.ws_request_impl.subscribe_24h_trade_statistics_event(symbol_list, callback, error_handler)
         self.__create_connection(request)
 
     def unsubscribe_all(self):

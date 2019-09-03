@@ -1,5 +1,7 @@
 import logging
+
 from huobi import SubscribeProtoClient
+from huobi.impl.utils.channels_proto import ChannelsProto
 from huobi.model_proto import *
 
 logger = logging.getLogger("huobi-client")
@@ -12,7 +14,7 @@ sub_client = SubscribeProtoClient()
 
 
 def callback(price_depth_event: 'PriceDepthEvent'):
-    print("Timestamp: " + str(price_depth_event.timestamp))  #TODO 缺少当前时间
+    print("Timestamp: " + str(price_depth_event.timestamp))
     depth = price_depth_event.data
     if depth.delta:
         print("Only Increased Data!")
@@ -31,4 +33,7 @@ def error(e: 'HuobiApiException'):
 
 
 sub_client.subscribe_price_depth_event("btcusdt,ethusdt,eosusdt", 10, "s0", callback, error)
-#sub_client.subscribe_price_depth_event("btcusdt", 10, "s0", callback, error)
+#sub_client.subscribe_price_depth_event("btcusdt", 10, None, callback, error)
+#sub_client.subscribe_price_depth_event("btcusdt", 3, "s0", callback, error)
+#sub_client.subscribe_price_depth_event("btcusdt", None, None, callback, error)
+

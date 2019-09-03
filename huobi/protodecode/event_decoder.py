@@ -13,57 +13,72 @@ class EventDecoder:
             return None
 
         r = EventDecoder.R()
-        result = market_downstream_protocol_pb2.Result().FromString(data)
-        #print ("Sequence === : " + (str(result.sequence)))
-        #print ("Code === : " + (str(result.code)))
+        try:
+            result = market_downstream_protocol_pb2.Result().FromString(data)
+            #print ("decode on message receive data === : " + (str(data)))
+            #print ("decode Sequence === : " + (str(result.sequence)))
+            #print ("decode Code === : " + (str(result.code)))
 
-        r.seq = None if not result.sequence else result.sequence
-        r.code = None if not result.code else result.code
-        r.message = None if not result.message else result.message
-        r.action = result.action
-        r.ch = result.ch
-        if result.data.value:
-            r.data = EventDecoder.decodeData(result)
+            r.seq = None if not result.sequence else result.sequence
+            r.code = None if not result.code else result.code
+            r.message = None if not result.message else result.message
+            r.action = result.action
+            r.ch = result.ch
+            if result.data.value:
+                r.data = EventDecoder.decodeData(result)
 
-        #print ("Sequence : " + (str(r.seq)))
-        #print ("Code : " + (str(r.code)))
+            #print ("decode Sequence : " + (str(r.seq)))
+            #print ("decode Code : " + (str(r.code)))
+            return r
+        except Exception as ex:
+            print ("<<<<<<<<<<<<<< " + ("%s " % (sys._getframe().f_code.co_name)) + " >>>>>>>>>>>>>   exception catched")
+            print(ex)
+            return r
 
         return r
 
     @staticmethod
     def decodeData(result):
-        if not result.data:
+        try:
+            if not result.data:
+                return None
+
+            print ("<<<<<<<<<<<<<< " + ("%s " % (sys._getframe().f_code.co_name)) + " >>>>>>>>>>>>>   action  : " + (str(result.action)) + ",  channel :"+ result.ch)
+            if (result.action == Action.PING):
+                return EventDecoder.decodePing(result)
+
+            ch = result.ch
+            if (ch.startswith("candlestick")):
+                if (result.action == Action.PUSH):
+                    return EventDecoder.decodeCandlestick(result)
+                else:
+                    return EventDecoder.decodeReqCandlestick(result)
+
+            if (ch.startswith("mbp")):
+                return EventDecoder.decodeMbp(result)
+
+            if (ch.startswith("overview")):
+                return EventDecoder.decodeOverview(result)
+
+            if (ch.startswith("summary")):
+                return EventDecoder.decodeSummary(result)
+
+            if (ch.startswith("aggrTrade")):
+                return EventDecoder.decodeAggrTrade(result)
+
+            if (ch.startswith("trades")):
+                if (result.action == Action.PUSH):
+                    return EventDecoder.decodeTrade(result)
+                else:
+                    return EventDecoder.decodeReqTrade(result)
+
+            print ("<<<<<<<<<<<<<< " + ("%s " % (sys._getframe().f_code.co_name)) + " >>>>>>>>>>>>>   action  : " + (str(result.action)) + ",  channel :" + result.ch + "   -- unprocessed")
+
             return None
-
-        if (result.action == Action.PING):
-            return EventDecoder.decodePing(result)
-
-        ch = result.ch
-        if (ch.startswith("candlestick")):
-            if (result.action == Action.PUSH):
-                return EventDecoder.decodeCandlestick(result)
-            else:
-                return EventDecoder.decodeReqCandlestick(result)
-
-        if (ch.startswith("mbp")):
-            return EventDecoder.decodeMbp(result)
-
-        if (ch.startswith("overview")):
-            return EventDecoder.decodeOverview(result)
-
-        if (ch.startswith("summary")):
-            return EventDecoder.decodeSummary(result)
-
-        if (ch.startswith("aggrTrade")):
-            return EventDecoder.decodeAggrTrade(result)
-
-        if (ch.startswith("trades")):
-            if (result.action == Action.PUSH):
-                return EventDecoder.decodeTrade(result)
-            else:
-                return EventDecoder.decodeReqTrade(result)
-
-        return None
+        except Exception as ex:
+            print ("<<<<<<<<<<<<<< " + ("%s " % (sys._getframe().f_code.co_name)) + " >>>>>>>>>>>>>   exception catched")
+            print(ex)
+            return None
 
     @staticmethod
     def decodePing(result):
@@ -157,7 +172,7 @@ class EventDecoder:
 
         e = EventDecoder.Overview()
         e.ts = d.ts
-        e.ticks = d.ticks
+        e.ticks = d.tick
 
         return e
 
@@ -253,7 +268,7 @@ class EventDecoder:
     class Overview:
         def __init__(self):
             self.ts = ""
-            self.ticks = list()
+            self.tick = list()   # tick 和原协议保持一致
 
     class OverviewTick:
         def __init__(self):

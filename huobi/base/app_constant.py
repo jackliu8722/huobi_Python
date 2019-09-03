@@ -34,11 +34,18 @@ class CandlestickInterval:
     INVALID = None
 
 
+class OrderSideValue:
+    BUY = 0
+    SELL = 1
+
 class OrderSide:
     BUY = "buy"
     SELL = "sell"
     INVALID = None
 
+class TradeDirectionValue:
+    BUY = 0
+    SELL = 1
 
 class TradeDirection:
     BUY = "buy"
@@ -191,3 +198,8 @@ class QueryDirection:
     PREV = "prev"
     NEXT = "next"
     INVALID = None
+
+
+class PriceDepthSetting:
+    LEVELS = [5,10,20,50,100]
+    STEP = ["s0","s1","s2","s3","s4","s5",]

@@ -8,8 +8,8 @@ handler = logging.StreamHandler()
 handler.setFormatter(logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s'))
 logger.addHandler(handler)
 
-sub_client = SubscriptionClient(api_key="xxxxxx",
-                                secret_key="xxxxxx")
+
+sub_client = SubscriptionClient(api_key="xxxxxx", secret_key="xxxxxx")
 
 
 def callback(account_event: 'AccountEvent'):

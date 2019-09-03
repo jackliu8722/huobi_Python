@@ -1,4 +1,6 @@
-class TradeStatistics:
+from huobi.model_proto.detailtrade import DetailTrade
+
+class DetailTradeEvent:
     """
     The summary of trading in the market for the last 24 hours
 
@@ -14,13 +16,6 @@ class TradeStatistics:
     """
 
     def __init__(self):
-        self.timestamp = 0
-        self.open = 0.0
-        self.close = 0.0
-        self.amount = 0.0
-        self.high = 0.0
-        self.low = 0.0
-        self.count = 0
-        self.volume = 0.0
-        self.amount = 0.0
         self.symbol = ""
+        self.timestamp = 0
+        self.data = DetailTrade()

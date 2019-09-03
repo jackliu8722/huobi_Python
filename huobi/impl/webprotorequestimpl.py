@@ -1,6 +1,8 @@
 import time
 import sys
 import json
+
+from huobi.base.app_constant import PriceDepthSetting
 from huobi.impl.webprotorequest import WebProtoRequest
 from huobi.impl.utils.channels_proto import ChannelsProto
 from huobi.impl.utils.channelparser import ChannelParser
@@ -8,6 +10,13 @@ from huobi.impl.accountinfomap import account_info_map
 from huobi.impl.utils.timeservice import *
 from huobi.impl.utils.inputchecker import *
 from huobi.model_proto import *
+from huobi.model_proto.aggregatetrade import AggregateTrade
+from huobi.model_proto.aggregatetradeevent import AggregateTradeEvent
+from huobi.model_proto.detailtrade import DetailTrade
+from huobi.model_proto.detailtradeevent import DetailTradeEvent
+from huobi.model_proto.overview import Overview
+from huobi.model_proto.overviewevent import OverviewEvent
+from huobi.model_proto.overviewtick import OverviewTick
 
 
 class WebProtoRequestImpl(object):
@@ -53,90 +62,158 @@ class WebProtoRequestImpl(object):
         request.error_handler = error_handler
         return request
 
-    # def subscribe_24h_trade_statistics_event(self, symbols, callback, error_handler=None):
-    #     check_symbol_list(symbols)
-    #     check_should_not_none(callback, "callback")
-    #
-    #     def subscription_handler(connection):
-    #         for val in symbols:
-    #             connection.send(trade_statistics_channel(val))
-    #             time.sleep(0.01)
-    #
-    #     def parse(json_wrapper):
-    #         ch = json_wrapper.get_string("ch")
-    #         parse = ChannelParser(ch)
-    #         trade_statistics_event = TradeStatisticsEvent()
-    #         trade_statistics_event.symbol = parse.symbol
-    #         ts = convert_cst_in_millisecond_to_utc(json_wrapper.get_int("ts"))
-    #         trade_statistics_event.timestamp = ts
-    #         tick = json_wrapper.get_object("tick")
-    #         statistics = TradeStatistics()
-    #         statistics.amount = tick.get_float("amount")
-    #         statistics.open = tick.get_float("open")
-    #         statistics.close = tick.get_float("close")
-    #         statistics.high = tick.get_float("high")
-    #         statistics.timestamp = ts
-    #         statistics.count = tick.get_int("count")
-    #         statistics.low = tick.get_float("low")
-    #         statistics.volume = tick.get_float("vol")
-    #         trade_statistics_event.trade_statistics = statistics
-    #         return trade_statistics_event
-    #
-    #     request = WebsocketRequest()
-    #     request.subscription_handler = subscription_handler
-    #     request.is_trading = False
-    #     request.parser = parse
-    #     request.update_callback = callback
-    #     request.error_handler = error_handler
-    #     return request
-    #
-    # def subscribe_trade_event(self, symbols, callback, error_handler=None):
-    #     check_symbol_list(symbols)
-    #     check_should_not_none(callback, "callback")
-    #
-    #     def subscription_handler(connection):
-    #         for val in symbols:
-    #             connection.send(trade_channel(val))
-    #             time.sleep(0.01)
-    #
-    #     def parse(json_wrapper):
-    #         ch = json_wrapper.get_string("ch")
-    #         parse = ChannelParser(ch)
-    #         trade_event = TradeEvent()
-    #         trade_event.symbol = parse.symbol
-    #         trade_event.timestamp = convert_cst_in_millisecond_to_utc(json_wrapper.get_int("ts"))
-    #         tick = json_wrapper.get_object("tick")
-    #         data_array = tick.get_array("data")
-    #         trade_list = list()
-    #         for item in data_array.get_items():
-    #             trade = Trade()
-    #             trade.amount = item.get_float("amount")
-    #             trade.price = item.get_float("price")
-    #             trade.trade_id = item.get_string("id")
-    #             trade.direction = item.get_string("direction")
-    #             trade.timestamp = convert_cst_in_millisecond_to_utc(item.get_int("ts"))
-    #             trade_list.append(trade)
-    #         trade_event.trade_list = trade_list
-    #         return trade_event
-    #
-    #     request = WebsocketRequest()
-    #     request.subscription_handler = subscription_handler
-    #     request.is_trading = False
-    #     request.parser = parse
-    #     request.update_callback = callback
-    #     request.error_handler = error_handler
-    #     return request
-    #
-    def subscribe_price_depth_event(self, symbols, levels, step, callback, error_handler=None):
+    def subscribe_24h_trade_statistics_event(self, symbols, callback, error_handler=None):
         check_symbol_list(symbols)
         check_should_not_none(callback, "callback")
-        # TODO levels check
-        # TODO step check
 
         def subscription_handler(connection):
             for symbol in symbols:
-                #print ("send connection for channel : " + ChannelsProto.price_depth_channel(symbol, levels, step))
-                connection.send(ChannelsProto.price_depth_channel(symbol, levels, step))
+                connection.send(ChannelsProto.trade_statistics_channel(symbol))
+                time.sleep(0.01)
+
+        def parse(r):
+            event_obj = TradeStatisticsEvent()
+            item = r.data
+            event_obj.symbol = item.symbol
+            event_obj.timestamp = convert_cst_in_millisecond_to_utc(item.ts)
+            data = TradeStatistics()
+            data.timestamp = convert_cst_in_second_to_utc(item.ts)
+            data.symbol = item.symbol
+            data.open = item.open
+            data.close = item.close
+            data.low = item.low
+            data.high = item.high
+            data.amount = item.turnover
+            data.count = item.num_of_trades
+            data.volume = item.volume
+            event_obj.trade_statistics = data
+
+            return event_obj
+
+        request = WebProtoRequest()
+        request.subscription_handler = subscription_handler
+        request.is_trading = False
+        request.parser = parse
+        request.update_callback = callback
+        request.error_handler = error_handler
+        return request
+
+    def subscribe_aggregate_trade_event(self, symbols, callback, error_handler=None):
+        check_symbol_list(symbols)
+        check_should_not_none(callback, "callback")
+
+        def subscription_handler(connection):
+            for symbol in symbols:
+                connection.send(ChannelsProto.aggregate_trade_channel(symbol))
+                time.sleep(0.01)
+
+        def parse(r):
+            event_obj = AggregateTradeEvent()
+            item = r.data
+            event_obj.symbol = item.symbol
+            event_obj.timestamp = convert_cst_in_millisecond_to_utc(item.ts)
+            data = AggregateTrade()
+            data.timestamp = convert_cst_in_second_to_utc(item.ts)
+            data.symbol = item.symbol
+            data.first_trade_id = item.first_trade_id
+            data.last_trade_id = item.last_trade_id
+            data.price = item.price
+            data.volume = item.volume
+            data.side = item.side
+            event_obj.data = data
+
+            return event_obj
+
+        request = WebProtoRequest()
+        request.subscription_handler = subscription_handler
+        request.is_trading = False
+        request.parser = parse
+        request.update_callback = callback
+        request.error_handler = error_handler
+        return request
+
+    def subscribe_detail_trade_event(self, symbols, callback, error_handler=None):
+        check_symbol_list(symbols)
+        check_should_not_none(callback, "callback")
+
+        def subscription_handler(connection):
+            for symbol in symbols:
+                connection.send(ChannelsProto.detail_trade_channel(symbol))
+                time.sleep(0.01)
+
+        def parse(r):
+            event_obj = DetailTradeEvent()
+            item = r.data
+            event_obj.symbol = item.symbol
+            event_obj.timestamp = convert_cst_in_millisecond_to_utc(item.ts)
+            data = DetailTrade()
+            data.timestamp = convert_cst_in_second_to_utc(item.ts)
+            data.symbol = item.symbol
+            data.trade_id = item.trade_id
+            data.price = item.price
+            data.volume = item.volume
+            data.side = item.side
+            event_obj.data = data
+
+            return event_obj
+
+        request = WebProtoRequest()
+        request.subscription_handler = subscription_handler
+        request.is_trading = False
+        request.parser = parse
+        request.update_callback = callback
+        request.error_handler = error_handler
+        return request
+
+    def subscribe_overview_event(self, callback, error_handler=None):
+        check_should_not_none(callback, "callback")
+
+        def subscription_handler(connection):
+            connection.send(ChannelsProto.overview_channel())
+
+        def format_tick_entry(tickObj):
+            overview_tick = OverviewTick()
+            overview_tick.symbol = tickObj.symbol
+            overview_tick.open = tickObj.open
+            overview_tick.close = tickObj.close
+            overview_tick.low = tickObj.low
+            overview_tick.high = tickObj.high
+            overview_tick.amount = tickObj.turnover
+            overview_tick.count = tickObj.num_of_trades
+            overview_tick.volume = tickObj.volume
+            return overview_tick
+
+        def parse(r):
+            event_obj = OverviewEvent()
+            item = r.data
+
+            event_obj.timestamp = convert_cst_in_millisecond_to_utc(item.ts)
+            data = Overview()
+
+            data.timestamp = convert_cst_in_second_to_utc(item.ts)
+            if len(item.ticks):
+                for row in item.ticks:
+                    data.ticks.append(format_tick_entry(row))
+
+            event_obj.data = data
+
+            return event_obj
+
+        request = WebProtoRequest()
+        request.subscription_handler = subscription_handler
+        request.is_trading = False
+        request.parser = parse
+        request.update_callback = callback
+        request.error_handler = error_handler
+        return request
+
+    def subscribe_price_depth_event(self, symbols, levels, step, callback, error_handler=None):
+        check_symbol_list(symbols)
+        check_should_not_none(callback, "callback")
+
+        def subscription_handler(connection):
+            for val in symbols:
+                connection.send(ChannelsProto.price_depth_channel(symbol=val, levels=levels, step=step))
                 time.sleep(0.01)
 
         def format_depth_entry(price, size):

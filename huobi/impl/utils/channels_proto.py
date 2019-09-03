@@ -1,4 +1,6 @@
 import json
+
+from huobi.base.app_constant import PriceDepthSetting
 from huobi.impl.utils.timeservice import get_current_timestamp
 
 class ChannelsProto:
@@ -13,39 +15,49 @@ class ChannelsProto:
         return json.dumps(channel)
 
 
-    def trade_channel(symbol):
-        channel = dict()
-        channel["sub"] = "market." + symbol + ".trade.detail"
-        channel["id"] = str(get_current_timestamp())
-        return json.dumps(channel)
 
     @staticmethod
-    def price_depth_channel(symbol, levels, step):
+    def price_depth_channel(symbol, levels = None, step = None):
+        print ("price_depth_channel params : " + symbol + "\t" + (str(levels)) + "\t" + (str(step)))
         channel = dict()
-        channel["ch"] = "mbp#" + symbol + "@" + (str(levels)) + "." + step
+        if levels and (levels in PriceDepthSetting.LEVELS):
+            if step and (step in PriceDepthSetting.STEP):
+                channel["ch"] = "mbp#" + symbol + "@" + (str(levels)) + "." + step
+            else:
+                channel["ch"] = "mbp#" + symbol + "@" + (str(levels))
+        else:
+            channel["ch"] = "mbp#btcusdt@p10"
+
+        channel["action"] = "sub"
+        print ("depth channel : " + channel["ch"])
+        return json.dumps(channel)
+
+
+
+    @staticmethod
+    def trade_statistics_channel(symbol):
+        channel = dict()
+        channel["ch"] = "summary#" + symbol
         channel["action"] = "sub"
         return json.dumps(channel)
 
-
-    def orders_channel(symbol):
+    @staticmethod
+    def aggregate_trade_channel(symbol):
         channel = dict()
-        channel["op"] = "sub"
-        channel["cid"] = str(get_current_timestamp())
-        channel["topic"] = "orders." + symbol
+        channel["ch"] = "aggrTrades#" + symbol
+        channel["action"] = "sub"
         return json.dumps(channel)
 
-
-    def trade_statistics_channel(symbol):
+    @staticmethod
+    def detail_trade_channel(symbol):
         channel = dict()
-        channel["sub"] = "market." + symbol + ".detail"
-        channel["id"] = str(get_current_timestamp())
+        channel["ch"] = "trades#" + symbol
+        channel["action"] = "sub"
         return json.dumps(channel)
 
-
-    def account_channel(mode):
+    @staticmethod
+    def overview_channel():
         channel = dict()
-        channel["op"] = "sub"
-        channel["cid"] = str(get_current_timestamp())
-        channel["topic"] = "accounts"
-        channel["mode"] = mode
+        channel["ch"] = "overview"
+        channel["action"] = "sub"
         return json.dumps(channel)

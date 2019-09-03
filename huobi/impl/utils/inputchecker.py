@@ -19,6 +19,16 @@ def check_symbol_list(symbols):
         check_symbol(symbol)
 
 
+def check_must_in_array(name_v, val_v, arraylist):
+    if val_v is None:
+        raise HuobiApiException(HuobiApiException.INPUT_ERROR, "[Input] " + name_v + " should not be null")
+    if arraylist is None:
+        raise HuobiApiException(HuobiApiException.INPUT_ERROR, "[Input] " + name_v + " valid value list should not be null")
+    if val_v in arraylist:
+        return
+    else:
+        raise HuobiApiException(HuobiApiException.INPUT_ERROR, "[Input] " + name_v + " is invalid value")
+
 def check_currency(currency):
     if not isinstance(currency, str):
         raise HuobiApiException(HuobiApiException.INPUT_ERROR, "[Input] currency must be string")
